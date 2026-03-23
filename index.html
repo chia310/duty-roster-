@@ -1,259 +1,265 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Users, ChevronRight, Edit2, Check, Clock, CalendarDays } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每週值日生公布欄</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .chalkboard {
+            background-color: #1a3a3a;
+            border: 12px solid #3d2b1f;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-4 md:p-8">
 
-const App = () => {
-  // 預設學生名單
-  const [students, setStudents] = useState([
-    "陳小明", "林美玲", "張大華", "李小龍", "王大明", 
-    "趙子龍", "黃蓉", "郭靖", "孫悟空", "周杰倫"
-  ]);
-  
-  // 設定起始日期 (預設為本週的週一)
-  const getInitialMonday = () => {
-    const d = new Date();
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 調整至本週一
-    const monday = new Date(d.setDate(diff));
-    monday.setHours(0, 0, 0, 0);
-    return monday;
-  };
-
-  const [baseDate, setBaseDate] = useState(getInitialMonday());
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempNames, setTempNames] = useState("");
-  const [today, setToday] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setToday(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // 計算週數差異
-  const getWeeksDiff = (date1, date2) => {
-    const oneWeek = 7 * 24 * 60 * 60 * 1000;
-    return Math.floor((date1 - date2) / oneWeek);
-  };
-
-  // 取得特定週次的日期區間字串
-  const getWeekRangeString = (weeksFromBase) => {
-    const start = new Date(baseDate);
-    start.setDate(start.getDate() + (weeksFromBase * 7));
-    
-    const end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    
-    const format = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
-    return `${format(start)} ~ ${format(end)}`;
-  };
-
-  // 計算當前索引
-  const weeksElapsed = getWeeksDiff(today, baseDate);
-  const currentIndex = ((weeksElapsed % students.length) + students.length) % students.length;
-
-  const startEditing = () => {
-    setTempNames(students.join("\n"));
-    setIsEditing(true);
-  };
-
-  const saveNames = () => {
-    const newList = tempNames.split("\n").map(n => n.trim()).filter(n => n !== "");
-    if (newList.length > 0) {
-      setStudents(newList);
-      setIsEditing(false);
-    }
-  };
-
-  // 計算接續週次的值日生資訊
-  const getUpcomingWeeks = (count) => {
-    let upcoming = [];
-    for (let i = 1; i <= count; i++) {
-      const targetWeek = weeksElapsed + i;
-      const studentIndex = ((targetWeek % students.length) + students.length) % students.length;
-      upcoming.push({
-        name: students[studentIndex],
-        range: getWeekRangeString(targetWeek)
-      });
-    }
-    return upcoming;
-  };
-
-  const formatFullDate = (date) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-    return date.toLocaleDateString('zh-TW', options);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
-      <div className="max-w-5xl mx-auto">
-        
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div className="flex items-center gap-4 mb-4 md:mb-0">
-            <div className="bg-indigo-600 p-3 rounded-xl text-white shadow-lg shadow-indigo-100">
-              <Calendar size={32} />
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4 mb-4 md:mb-0">
+                <div class="bg-indigo-600 p-3 rounded-xl text-white shadow-lg shadow-indigo-100">
+                    <i class="fa-solid fa-calendar-check text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900">每週值日生系統</h1>
+                    <p id="current-date-display" class="text-slate-500 font-medium"></p>
+                </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">每週值日生系統</h1>
-              <p className="text-slate-500 font-medium flex items-center gap-1">
-                <Clock size={14} /> 今日是：{formatFullDate(today)}
-              </p>
-            </div>
-          </div>
-          
-          <button 
-            onClick={startEditing}
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white transition-all rounded-xl font-medium shadow-md shadow-slate-200 active:scale-95"
-          >
-            <Edit2 size={18} /> 編輯名單
-          </button>
+            
+            <button onclick="openModal()" class="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white transition-all rounded-xl font-medium shadow-md shadow-slate-200 active:scale-95">
+                <i class="fa-solid fa-pen-to-square"></i> 編輯名單
+            </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Main Display Card */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 relative">
-              <div className="bg-indigo-600 py-4 px-6 text-white text-center">
-                <div className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-1">Current Week</div>
-                <div className="text-xl font-bold flex items-center justify-center gap-2">
-                  <CalendarDays size={20} />
-                  {getWeekRangeString(weeksElapsed)}
-                </div>
-              </div>
-              
-              <div className="p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
-                <div className="relative mb-8">
-                  <div className="w-40 h-40 bg-indigo-50 rounded-full flex items-center justify-center border-4 border-indigo-100">
-                    <Users size={80} className="text-indigo-600" />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-900 w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-white font-bold">
-                    ★
-                  </div>
-                </div>
-                
-                <h2 className="text-2xl text-indigo-500 font-bold mb-2">本週負責人</h2>
-                <div className="text-8xl font-black text-slate-900 mb-6 tracking-tight">
-                  {students[currentIndex]}
-                </div>
-                <p className="bg-slate-100 px-6 py-2 rounded-full text-slate-500 font-bold text-sm">
-                  請同學主動協助維持環境整潔
-                </p>
-              </div>
-            </div>
-
-            {/* Teacher's Chalkboard */}
-            <div className="bg-[#1a3a3a] rounded-2xl p-8 shadow-2xl text-white border-[12px] border-[#3d2b1f] relative">
-              <div className="absolute top-4 right-4 opacity-20">
-                <div className="w-12 h-2 bg-white rounded-full rotate-45 mb-2"></div>
-                <div className="w-12 h-2 bg-white rounded-full -rotate-12"></div>
-              </div>
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 border-b border-white/20 pb-4">
-                <span className="w-4 h-4 bg-yellow-300 rounded-full"></span> 
-                值日生守則 (每週任務)
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <span className="text-yellow-300 font-bold text-xl">01</span>
-                    <p className="text-slate-100 leading-relaxed">早上 07:30 前完成基本打掃與黑板清理。</p>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-yellow-300 font-bold text-xl">02</span>
-                    <p className="text-slate-100 leading-relaxed">每節下課後確認講台整潔。</p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <span className="text-yellow-300 font-bold text-xl">03</span>
-                    <p className="text-slate-100 leading-relaxed">放學前確認垃圾已清空，窗戶已鎖好。</p>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-yellow-300 font-bold text-xl">04</span>
-                    <p className="text-slate-100 leading-relaxed">週五放學時進行額外的大掃除項目。</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Upcoming Weeks Sidebar */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-4">
-                <Users size={20} className="text-indigo-600" /> 接續週次預告
-              </h3>
-              <div className="space-y-4">
-                {getUpcomingWeeks(5).map((item, idx) => (
-                  <div key={idx} className="group relative pl-4 border-l-2 border-slate-100 hover:border-indigo-400 transition-all">
-                    <div className="text-xs font-bold text-indigo-500 mb-1 flex items-center gap-1">
-                      <Calendar size={12} /> {item.range}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Main Display Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Current Person Card -->
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 relative">
+                    <div class="bg-indigo-600 py-4 px-6 text-white text-center">
+                        <div class="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-1">Current Week</div>
+                        <div id="week-range-display" class="text-xl font-bold flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-calendar-days"></i> 載入中...
+                        </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 group-hover:bg-indigo-50 transition-colors">
-                      <span className="font-bold text-slate-700">{item.name}</span>
-                      <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-400" />
+                    
+                    <div class="p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
+                        <div class="relative mb-8">
+                            <div class="w-40 h-40 bg-indigo-50 rounded-full flex items-center justify-center border-4 border-indigo-100">
+                                <i class="fa-solid fa-users text-5xl text-indigo-600"></i>
+                            </div>
+                            <div class="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-900 w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-white font-bold">
+                                ★
+                            </div>
+                        </div>
+                        
+                        <h2 class="text-2xl text-indigo-500 font-bold mb-2">本週負責人</h2>
+                        <div id="current-student-name" class="text-8xl font-black text-slate-900 mb-6 tracking-tight">
+                            --
+                        </div>
+                        <p class="bg-slate-100 px-6 py-2 rounded-full text-slate-500 font-bold text-sm">
+                            請同學主動協助維持環境整潔
+                        </p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                </div>
+
+                <!-- Chalkboard Rules -->
+                <div class="chalkboard rounded-2xl p-8 text-white relative">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3 border-b border-white/20 pb-4">
+                        <span class="w-4 h-4 bg-yellow-300 rounded-full"></span> 
+                        值日生守則 (每週任務)
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="flex gap-4">
+                                <span class="text-yellow-300 font-bold text-xl">01</span>
+                                <p class="text-slate-100 leading-relaxed">早上 07:30 前完成基本打掃與黑板清理。</p>
+                            </div>
+                            <div class="flex gap-4">
+                                <span class="text-yellow-300 font-bold text-xl">02</span>
+                                <p class="text-slate-100 leading-relaxed">每節下課後確認講台整潔。</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex gap-4">
+                                <span class="text-yellow-300 font-bold text-xl">03</span>
+                                <p class="text-slate-100 leading-relaxed">放學前確認垃圾已清空，窗戶已鎖好。</p>
+                            </div>
+                            <div class="flex gap-4">
+                                <span class="text-yellow-300 font-bold text-xl">04</span>
+                                <p class="text-slate-100 leading-relaxed">週五放學時進行額外的大掃除項目。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-100 relative overflow-hidden">
-              <div className="relative z-10">
-                <h3 className="font-bold text-xl mb-3">小學堂</h3>
-                <p className="text-blue-50 text-sm leading-relaxed opacity-90">
-                  週次是以每週一作為起始。如果名單中的人數不足，系統會自動循環。若有特殊連假調整，請手動編輯名單或聯絡管理員。
-                </p>
-              </div>
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Upcoming Weeks List -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-4">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> 接續週次預告
+                    </h3>
+                    <div id="upcoming-list" class="space-y-4">
+                        <!-- Upcoming items will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Tips Card -->
+                <div class="bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-100 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="font-bold text-xl mb-3">小提醒</h3>
+                        <p class="text-blue-50 text-sm leading-relaxed opacity-90">
+                            週次是以每週一作為起始。如果名單中的人數不足，系統會自動循環。若有特殊連假調整，請點擊編輯名單更換順序。
+                        </p>
+                    </div>
+                    <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                </div>
             </div>
-          </div>
         </div>
 
-        {/* Edit Modal */}
-        {isEditing && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-white/20">
-              <div className="p-8 border-b border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
-                    <Edit2 size={24} />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-800">編輯學生名單</h2>
-                </div>
-                <p className="text-slate-400">系統將根據此順序每週進行自動輪替。</p>
-              </div>
-              <div className="p-8">
-                <textarea 
-                  value={tempNames}
-                  onChange={(e) => setTempNames(e.target.value)}
-                  className="w-full h-72 p-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-mono text-lg resize-none shadow-inner bg-slate-50"
-                  placeholder="輸入姓名，每行一位同學..."
-                ></textarea>
-              </div>
-              <div className="p-8 bg-slate-50 flex gap-4">
-                <button 
-                  onClick={() => setIsEditing(false)}
-                  className="flex-1 px-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 transition-all active:scale-95"
-                >
-                  取消
-                </button>
-                <button 
-                  onClick={saveNames}
-                  className="flex-1 px-4 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 active:scale-95"
-                >
-                  <Check size={20} /> 更新名單
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <footer className="mt-12 text-center text-slate-400 text-sm">
-          班級自動化管理系統 • 智慧輪替模組 v2.0
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-slate-400 text-sm">
+            班級自動化管理系統 • 智慧輪替 HTML 版
         </footer>
-      </div>
     </div>
-  );
-};
 
-export default App;
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-white/20">
+            <div class="p-8 border-b border-slate-100">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+                        <i class="fa-solid fa-users-gear text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">編輯學生名單</h2>
+                </div>
+                <p class="text-slate-400 text-sm">請按順序輸入姓名，每一行一位同學。</p>
+            </div>
+            <div class="p-8">
+                <textarea id="student-names-input" class="w-full h-72 p-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-mono text-lg resize-none shadow-inner bg-slate-50" placeholder="陳小明&#10;林美玲..."></textarea>
+            </div>
+            <div class="p-8 bg-slate-50 flex gap-4">
+                <button onclick="closeModal()" class="flex-1 px-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 transition-all">
+                    取消
+                </button>
+                <button onclick="saveNames()" class="flex-1 px-4 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100">
+                    <i class="fa-solid fa-check"></i> 更新名單
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始名單
+        let students = ["陳小明", "林美玲", "張大華", "李小龍", "王大明", "趙子龍", "黃蓉", "郭靖", "孫悟空", "周杰倫"];
+        
+        // 取得本週週一作為基準點
+        function getInitialMonday() {
+            const d = new Date();
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(d.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            return monday;
+        }
+
+        const baseDate = getInitialMonday();
+
+        function getWeeksDiff(date1, date2) {
+            const oneWeek = 7 * 24 * 60 * 60 * 1000;
+            return Math.floor((date1 - date2) / oneWeek);
+        }
+
+        function getWeekRangeString(weeksFromBase) {
+            const start = new Date(baseDate);
+            start.setDate(start.getDate() + (weeksFromBase * 7));
+            const end = new Date(start);
+            end.setDate(end.getDate() + 6);
+            
+            const format = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+            return `${format(start)} ~ ${format(end)}`;
+        }
+
+        function updateUI() {
+            const today = new Date();
+            const weeksElapsed = getWeeksDiff(today, baseDate);
+            
+            // 更新標題日期
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('current-date-display').innerText = `今日是：${today.toLocaleDateString('zh-TW', dateOptions)}`;
+            
+            // 更新當前週次區間
+            document.getElementById('week-range-display').innerHTML = `<i class="fa-solid fa-calendar-days"></i> ${getWeekRangeString(weeksElapsed)}`;
+            
+            // 更新當前值日生
+            const currentIndex = ((weeksElapsed % students.length) + students.length) % students.length;
+            document.getElementById('current-student-name').innerText = students[currentIndex];
+
+            // 更新預告列表
+            const upcomingList = document.getElementById('upcoming-list');
+            upcomingList.innerHTML = '';
+            
+            for (let i = 1; i <= 5; i++) {
+                const targetWeek = weeksElapsed + i;
+                const studentIndex = ((targetWeek % students.length) + students.length) % students.length;
+                const name = students[studentIndex];
+                const range = getWeekRangeString(targetWeek);
+                
+                const item = document.createElement('div');
+                item.className = 'group relative pl-4 border-l-2 border-slate-100 hover:border-indigo-400 transition-all';
+                item.innerHTML = `
+                    <div class="text-xs font-bold text-indigo-500 mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-calendar text-[10px]"></i> ${range}
+                    </div>
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 group-hover:bg-indigo-50 transition-colors">
+                        <span class="font-bold text-slate-700">${name}</span>
+                        <i class="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
+                    </div>
+                `;
+                upcomingList.appendChild(item);
+            }
+        }
+
+        // Modal 控制
+        function openModal() {
+            document.getElementById('student-names-input').value = students.join('\n');
+            const modal = document.getElementById('edit-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('edit-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveNames() {
+            const input = document.getElementById('student-names-input').value;
+            const newList = input.split('\n').map(n => n.trim()).filter(n => n !== "");
+            if (newList.length > 0) {
+                students = newList;
+                updateUI();
+                closeModal();
+            } else {
+                alert("請至少輸入一個姓名！");
+            }
+        }
+
+        // 頁面載入後初始化
+        window.onload = updateUI;
+        // 每一分鐘檢查一次日期（如果跨夜或跨週會自動更新）
+        setInterval(updateUI, 60000);
+    </script>
+</body>
+</html>
