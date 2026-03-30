@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .chalkboard {
+    background-color: #1a3a3a;
+    border: 12px solid #3d2b1f;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  }
+}
